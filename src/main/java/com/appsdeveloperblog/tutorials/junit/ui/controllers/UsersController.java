@@ -30,6 +30,7 @@ public class UsersController {
         UserDto userDto = new ModelMapper().map(userDetails, UserDto.class);
 
         UserDto createdUser = usersService.createUser(userDto);
+       // createdUser.setUserId(""); //set this to make test fail
 
         return modelMapper.map(createdUser, UserRest.class);
     }
