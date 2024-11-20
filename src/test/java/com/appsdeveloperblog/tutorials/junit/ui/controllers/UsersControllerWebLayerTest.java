@@ -42,7 +42,7 @@ class UsersControllerWebLayerTest {
     @Test
     @DisplayName("user can be created")
     void testCreateUser_whenValidUseDetailsProvided_returnsCreatedUserDetails() throws Exception {
-        //arrange
+        //arrange - request
         UserDetailsRequestModel user = new UserDetailsRequestModel();
         user.setFirstName("Nickson");
         user.setLastName("Brown");
@@ -52,12 +52,13 @@ class UsersControllerWebLayerTest {
 
         //todo : createUser method return UserDto hence we need to create a pre -defined UserDto to be returned by the mock
         // use model mapper to map the above objet to below dto class
+        //arrange - response from the createUse
         UserDto userDto = new ModelMapper().map(user, UserDto.class);
         userDto.setUserId(UUID.randomUUID().toString());
 
-        //mock create user method and make it return above userDto
+        //mock create user method and make it return above userDto , add this before act section since we will  need to mock the
+        //userService
         when(usersService.createUser(any(UserDto.class))).thenReturn(userDto);
-
 
         //todo: class to configure http request
         RequestBuilder content = MockMvcRequestBuilders.post("/users")
