@@ -9,10 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -68,7 +70,7 @@ public class UsersControllerIntegrationTest {
 
         HttpEntity<String> request = new HttpEntity<>(userDetailsRequestJson.toString(), httpHeaders);
 
-        //act - telll rest template to convert json string to UserRest object
+        //act - tell rest template to convert json string to UserRest object
         ResponseEntity<UserRest> createdUserDetailsEntity = restTemplate.postForEntity("/users",
                 request, UserRest.class);
 
@@ -86,5 +88,24 @@ public class UsersControllerIntegrationTest {
         assertFalse(createdUserDetails.getUserId().isEmpty(),
                 "Returned users id seems empty");
 
+    }
+
+    @DisplayName("GET /user requires JWT")
+    @Test
+    void testGetUsers_whenMissingJwtToken_return403() {
+        //arrange
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.set("Accept", "application/json");
+
+        //expects only header since it is a GET request - no body expected
+        HttpEntity<String> request = new HttpEntity<>(httpHeaders);
+        //act
+        ResponseEntity<List<UserRest>> responseEntity = restTemplate.exchange("/users",
+                HttpMethod.GET, request,
+                new ParameterizedTypeReference<>() {
+                });
+        //assert
+        assertEquals(HttpStatus.FORBIDDEN.value(), responseEntity.getStatusCode().value(),
+                "Missing jwt token should return 403");
     }
 }
