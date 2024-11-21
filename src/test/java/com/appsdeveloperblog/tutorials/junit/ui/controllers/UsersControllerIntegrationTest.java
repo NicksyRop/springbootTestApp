@@ -1,5 +1,6 @@
 package com.appsdeveloperblog.tutorials.junit.ui.controllers;
 
+import com.appsdeveloperblog.tutorials.junit.security.SecurityConstants;
 import com.appsdeveloperblog.tutorials.junit.ui.response.UserRest;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,8 +17,7 @@ import org.springframework.test.context.TestPropertySource;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 /**
@@ -107,5 +107,26 @@ public class UsersControllerIntegrationTest {
         //assert
         assertEquals(HttpStatus.FORBIDDEN.value(), responseEntity.getStatusCode().value(),
                 "Missing jwt token should return 403");
+    }
+
+    @DisplayName("Login works")
+    @Test
+    void testLoginUser_whenValidDetailsProvided_returnJwtInAuthorizationHeader() throws JSONException {
+        //arrange
+        JSONObject loginRequestJson = new JSONObject();
+        loginRequestJson.put("email", "nickson@gnail.com");
+        loginRequestJson.put("password", "password");
+
+        //todo - http entity can accept body without headers for post
+        HttpEntity<String> request = new HttpEntity<>(loginRequestJson.toString());
+        //act
+        ResponseEntity<Object> reponseEntity = restTemplate.postForEntity("/users/login", request, null);
+        //test
+        assertEquals(HttpStatus.OK.value(), reponseEntity.getStatusCode().value(), "" +
+                "Expecting Http status code 200");
+        assertNotNull(reponseEntity.getHeaders().getValuesAsList(SecurityConstants.HEADER_STRING).get(0),
+                "Response should contain Authorization with JWT token");
+        assertNotNull(reponseEntity.getHeaders().getValuesAsList("UserID").get(0),
+                "Response should contain UserID in the header");
     }
 }
