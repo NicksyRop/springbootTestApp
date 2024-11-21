@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestPropertySource(locations = "/application-test.properties") // this will have higher precedence than the normal props i.e props in the test will be pulled otherwise if absent in the normal prop
 @DisplayName("User controller integration test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class UsersControllerIntegrationTest {
 
     /**
@@ -50,6 +51,8 @@ public class UsersControllerIntegrationTest {
     //inject http client
     @Autowired
     private TestRestTemplate restTemplate;
+
+    private String authToken; //class member variable
 
     @Test
     void contextLoads() {
@@ -128,12 +131,38 @@ public class UsersControllerIntegrationTest {
         HttpEntity<String> request = new HttpEntity<>(loginRequestJson.toString());
         //act
         ResponseEntity<Object> reponseEntity = restTemplate.postForEntity("/users/login", request, null);
+
+        //set token so we can use in step 3
+        authToken = reponseEntity.getHeaders().getValuesAsList(SecurityConstants.HEADER_STRING).get(0);
         //test
         assertEquals(HttpStatus.OK.value(), reponseEntity.getStatusCode().value(), "" +
                 "Expecting Http status code 200");
-        assertNotNull(reponseEntity.getHeaders().getValuesAsList(SecurityConstants.HEADER_STRING).get(0),
+        assertNotNull(authToken,
                 "Response should contain Authorization with JWT token");
         assertNotNull(reponseEntity.getHeaders().getValuesAsList("UserID").get(0),
                 "Response should contain UserID in the header");
+    }
+    @DisplayName("GET /user works with valid JWT")
+    @Test
+    @Order(4) // Run after getting user token
+    void testGetUsers_whenValidJwtProvided_returnUserDetails() {
+        //arrange
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        //headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON)); // by default spring uses this
+        headers.setBearerAuth(authToken);
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        //act
+        ResponseEntity<List<UserRest>> responseEntity = restTemplate.exchange("/users",
+                HttpMethod.GET,
+                request,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+
+        //assert
+        assertEquals(HttpStatus.OK.value(), responseEntity.getStatusCode().value(), "Http status code should be 200");
+        assertTrue(responseEntity.getBody().size()  == 1 , "Response should contain at least one user");
+
     }
 }
