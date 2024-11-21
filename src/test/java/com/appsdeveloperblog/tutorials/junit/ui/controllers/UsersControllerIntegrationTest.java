@@ -4,8 +4,7 @@ import com.appsdeveloperblog.tutorials.junit.security.SecurityConstants;
 import com.appsdeveloperblog.tutorials.junit.ui.response.UserRest;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -23,6 +22,10 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * @author nnkipkorir
  * created 20/11/2024
+
+ * - Order the test cases since they are executed in a non-deterministic manner
+ * @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+ * - i.e we need to register user , login , get token then use it for other operations
  */
 
 
@@ -33,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.*;
        // properties = {"server.port=9090"})  //various props can be comma seperated
 @TestPropertySource(locations = "/application-test.properties") // this will have higher precedence than the normal props i.e props in the test will be pulled otherwise if absent in the normal prop
 @DisplayName("User controller integration test")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class UsersControllerIntegrationTest {
 
     /**
@@ -54,6 +58,7 @@ public class UsersControllerIntegrationTest {
 
     @DisplayName("user can be created")
     @Test
+    @Order(1) // execute first
     void testCreateUser_whenValidDetailsProvided_returnUserDetails() throws JSONException {
         //arrange
         JSONObject userDetailsRequestJson = new JSONObject();
@@ -92,6 +97,7 @@ public class UsersControllerIntegrationTest {
 
     @DisplayName("GET /user requires JWT")
     @Test
+    @Order(2) //execute second
     void testGetUsers_whenMissingJwtToken_return403() {
         //arrange
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -111,6 +117,7 @@ public class UsersControllerIntegrationTest {
 
     @DisplayName("Login works")
     @Test
+    @Order(3) //execute third
     void testLoginUser_whenValidDetailsProvided_returnJwtInAuthorizationHeader() throws JSONException {
         //arrange
         JSONObject loginRequestJson = new JSONObject();
