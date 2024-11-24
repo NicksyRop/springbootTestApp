@@ -21,11 +21,13 @@ class UserEntityIntergrationTest {
 
     UserEntity userEntity;
 
+    private final String userId = UUID.randomUUID().toString();
+
 
     @BeforeEach
     void setUp() {
        userEntity = new UserEntity();
-        userEntity.setUserId(UUID.randomUUID().toString());
+        userEntity.setUserId(userId);
         userEntity.setFirstName("Nickson");
         userEntity.setLastName("Davis");
         userEntity.setEmail("nickson@gmail.com");
@@ -50,7 +52,7 @@ class UserEntityIntergrationTest {
     }
 
     @Test
-    @DisplayName("Test when oo long first name")
+    @DisplayName("Test when long first name")
     void testUserEntuty_whenFirstNameTooLong_ShouldThrowException() {
         //arrange
         userEntity.setFirstName("xH7c9PqJkMZ5vW8LRdT1B2NYXuEfg3AloQt6KVyCJmD40sznUHpFabGeX"); //greater than 50 chars
@@ -58,6 +60,25 @@ class UserEntityIntergrationTest {
         //assert and act
         assertThrows(PersistenceException.class, () -> testEntityManager.persistAndFlush(userEntity)
         ,"Expected PersistenceException to be thrown");
+    }
+
+    @Test
+    @DisplayName("Duplicate user id throws exception")
+    void testUserEntity_whenDuplicateUserId_ShouldThrowException() {
+        //arrange
+        testEntityManager.persistAndFlush(userEntity); // store the user on before each since they are transactional
+        //create a new user entity bu assign it a user id already used
+        UserEntity newUserEntity = new UserEntity();
+        newUserEntity.setUserId(userId);
+        newUserEntity.setFirstName("Nakasoni");
+        newUserEntity.setLastName("Davis");
+        newUserEntity.setEmail("nakasoni@gmail.com");
+        newUserEntity.setEncryptedPassword("12345");
+
+        //act and asert
+        assertThrows(PersistenceException.class, () -> testEntityManager.persistAndFlush(newUserEntity)
+        ,"Expected PersistenceException to be thrown");
+
     }
 
 }
