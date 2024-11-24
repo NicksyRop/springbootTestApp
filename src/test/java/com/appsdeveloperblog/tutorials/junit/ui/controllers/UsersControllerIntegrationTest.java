@@ -161,7 +161,7 @@ public class UsersControllerIntegrationTest {
         );
 
         //assert
-        assertEquals(HttpStatus.OK.value(), responseEntity.getStatusCode().value(), "Http status code should be 200");
+        assertEquals(HttpStatus.OK.value(), responseEntity.getStatusCode().value()  , "Http status code should be 200");
         assertTrue(responseEntity.getBody().size()  == 1 , "Response should contain at least one user");
 
     }
