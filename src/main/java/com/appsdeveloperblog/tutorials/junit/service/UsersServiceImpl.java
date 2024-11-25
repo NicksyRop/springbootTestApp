@@ -8,7 +8,6 @@ import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +37,7 @@ public class UsersServiceImpl implements UsersService {
     @Override
     public UserDto createUser(UserDto user) {
 
-        if (usersRepository.findByEmail(user.getEmail()) != null)
+        if (usersRepository.findByEmailEndsWith(user.getEmail()) != null)
             throw new UsersServiceException("Record already exists");
 
         ModelMapper modelMapper = new ModelMapper();
@@ -74,7 +73,7 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public UserDto getUser(String email) {
-        UserEntity userEntity = usersRepository.findByEmail(email);
+        UserEntity userEntity = usersRepository.findByEmailEndsWith(email);
 
         if (userEntity == null)
             throw new UsernameNotFoundException(email);
@@ -87,7 +86,7 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        UserEntity userEntity = usersRepository.findByEmail(email);
+        UserEntity userEntity = usersRepository.findByEmailEndsWith(email);
 
         if (userEntity == null)
             throw new UsernameNotFoundException(email);

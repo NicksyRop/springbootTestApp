@@ -1,16 +1,20 @@
 package com.appsdeveloperblog.tutorials.junit.security;
 
 import com.appsdeveloperblog.tutorials.junit.io.UsersRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.crypto.SecretKey;
 import java.io.IOException;
 
 public class AuthorizationFilter extends BasicAuthenticationFilter {
@@ -43,21 +47,25 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
         String token = request.getHeader(SecurityConstants.HEADER_STRING);
 
-        if (token != null) {
+        if (token == null) return null;
 
-            token = token.replace(SecurityConstants.TOKEN_PREFIX, "");
+        token = token.replace(SecurityConstants.TOKEN_PREFIX, "").trim();
+        byte[] secretKeyBytes = SecurityConstants.TOKEN_SECRET.getBytes();
+        SecretKey secretKey = Keys.hmacShaKeyFor(secretKeyBytes);
 
-            String user = Jwts.parser()
-                    .setSigningKey( SecurityConstants.TOKEN_SECRET)
-                    .parseClaimsJws( token )
-                    .getBody()
-                    .getSubject();
+        try {
+
+            JwtParser parser = Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build();
+            Claims claims = parser.parseSignedClaims(token).getPayload();
+            String user = (String) claims.get("sub");
 
             if (user != null) {
                 return new UsernamePasswordAuthenticationToken(user, null, null);
             }
-
-            return null;
+        } catch(Exception ex) {
+            ex.printStackTrace();
         }
 
         return null;
