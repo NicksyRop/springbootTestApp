@@ -14,7 +14,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-//@TestPropertySource(locations = "/application-test.properties")
+@TestPropertySource(locations = "/application-test.properties")
 class UsersRepositoryTest {
     @Autowired
     private TestEntityManager testEntityManager;
